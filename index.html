@@ -58,15 +58,16 @@ button{font:inherit;color:inherit}
 .bar nav a:hover{text-decoration:underline}
 
 /* 첫 화면 */
-.hero{display:grid;gap:1.4rem;padding:clamp(.6rem,2vw,1.6rem) var(--pad) clamp(2.2rem,5vw,4rem)}
-.hero h1{margin:0 0 0 -.045em;font-weight:900;font-size:min(30.5vw,30rem);line-height:.9;letter-spacing:-.065em}
-.hero-side{max-width:27rem}
-.aff{margin:0 0 .9rem;font-weight:700;line-height:1.45}
-.intro{margin:0;color:var(--ink-2)}
+.hero{container-type:inline-size;padding:0 var(--pad) clamp(2.2rem,5vw,4rem)}
+/* ascexix 일곱 글자가 화면 폭을 꽉 채우게: 글자 폭이 글자 크기의 약 3.37배 */
+.hero h1{margin:0 0 0 -.025em;font-weight:900;font-size:25vw;font-size:calc(100cqw / 3.37);line-height:.86;letter-spacing:-.055em;white-space:nowrap}
+.hero-side{display:grid;gap:1rem;margin-top:clamp(.9rem,2vw,1.6rem)}
+.aff{margin:0;line-height:1.45}
+.aff b{display:block;font-weight:800}
+.hero-side p{margin:0}
+.origin,.intro{color:var(--ink-2);max-width:30rem}
 @media (min-width:900px){
-  .hero{grid-template-columns:auto minmax(18rem,27rem);justify-content:space-between;align-items:end;gap:3rem}
-  .hero h1{font-size:min(21.5vw,26rem)}
-  .hero-side{padding-bottom:1.2vw}
+  .hero-side{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1.5fr);column-gap:1.2rem}
 }
 
 /* 섹션 공통 */
@@ -214,10 +215,11 @@ dialog.reader[open]{display:flex;flex-direction:column}
 
 <main>
   <section class="hero">
-    <h1>안승찬</h1>
+    <h1>ascexix</h1>
     <div class="hero-side">
-      <p class="aff">고려대학교 세종캠퍼스<br>글로벌학부 한국학전공 26학번</p>
-      <p class="intro">올해 조치원 상권, 춘천 은퇴자마을, 세종시 고교 학술제, 학생식당 잔반을 팀으로 다뤘습니다. 그 과정에서 정책제안서, 수업안, 카드뉴스, AI 영상을 직접 만들었고, 그 아홉 건을 아래에 적었습니다. 제목을 누르면 맡은 일과 결과물이 나옵니다.</p>
+      <p class="aff"><b>안승찬</b>고려대학교 세종캠퍼스<br>글로벌학부 한국학전공 26학번</p>
+      <p class="origin">ascexix는 ascesis를 고쳐 쓴 이름입니다. ascesis는 수련, 단련을 뜻하는 그리스어 askesis에서 온 말입니다. 앞 세 글자 asc는 제 이름 머리글자이기도 합니다. 뒤쪽 s 두 개는 x로 바꿔 적었습니다.</p>
+      <p class="intro">올해 조치원 상권, 춘천 은퇴자마을, 세종시 고교 학술제, 학생식당 잔반을 팀으로 다뤘습니다. 정책제안서, 수업안, 카드뉴스, AI 영상을 직접 만들었고, 그 아홉 건을 아래에 적었습니다. 제목을 누르면 맡은 일과 결과물이 나옵니다.</p>
     </div>
   </section>
 
