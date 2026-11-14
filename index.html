@@ -192,6 +192,7 @@ dialog.reader[open]{display:flex;flex-direction:column}
 .shots img{width:100%;height:auto;display:block;background:var(--line)}
 .shots figcaption{font-size:.88rem;color:var(--ink-2);margin-top:.4rem}
 .shots.quad{grid-template-columns:1fr 1fr}
+.shots video{width:100%;height:auto;aspect-ratio:16 / 9;display:block;background:#000}
 .note{color:var(--ink-2);font-size:.92rem}
 .r-foot{display:grid;grid-template-columns:1fr 1fr;border-bottom:2px solid var(--ink)}
 .r-foot button{display:block;min-width:0;padding:1.2rem 0 1.4rem;text-align:left;background:transparent;border:0;border-radius:0;cursor:pointer}
@@ -208,6 +209,7 @@ dialog.reader[open]{display:flex;flex-direction:column}
   .shots.many{grid-template-columns:1fr 1fr}
   .shots.many figure:first-child{grid-column:1 / -1}
   .shots.quad{grid-template-columns:repeat(4,1fr)}
+  .shots.vids{grid-template-columns:1fr 1fr}
   .r-foot{grid-template-columns:1fr auto 1fr;column-gap:1.2rem;align-items:start}
   .r-foot .f-list{grid-column:2;grid-row:1;border-top:0;padding:1.2rem 0 1.4rem;align-self:stretch}
   .r-foot .f-next{grid-column:3}
@@ -268,7 +270,7 @@ dialog.reader[open]{display:flex;flex-direction:column}
         <a class="w" href="#energy">
           <span class="w-no">05</span>
           <span class="w-main"><span class="w-title">에너지 절약</span><span class="w-desc">전기, 냉난방, 물. 방을 나가기 전에 확인할 것만 추린 카드뉴스 4장</span></span>
-          <span class="w-foot"><span class="w-meta"><span class="w-role">4인 팀</span><span>호연학사 사생회</span><span>2026년 9월</span></span><span class="w-state done">당선</span></span>
+          <span class="w-foot"><span class="w-meta"><span class="w-role">4인 팀</span><span>호연학사 사생회</span><span>2026년 9월</span></span><span class="w-state done">채택</span></span>
           <img class="w-thumb" data-img="en_1" alt="">
         </a>
       </li>
@@ -297,8 +299,8 @@ dialog.reader[open]{display:flex;flex-direction:column}
       <li>
         <a class="w" href="#hangeul">
           <span class="w-no">09</span>
-          <span class="w-main"><span class="w-title">한글 수호대</span><span class="w-desc">한글 만든 원리를 미션으로 푸는 초등 수업의 세계관과 캐릭터</span></span>
-          <span class="w-foot"><span class="w-meta"><span class="w-role">수업 준비, 스토리라인·등장인물 발표</span><span>보람초 6학년 수업</span><span>2026년 11월</span></span><span class="w-state run">준비 중</span></span>
+          <span class="w-main"><span class="w-title">한글 수호대</span><span class="w-desc">한글 만든 원리를 미션으로 푸는 초등 수업, 그 수업에 쓴 AI 영상 여섯 편</span></span>
+          <span class="w-foot"><span class="w-meta"><span class="w-role">AI 영상 여섯 편 제작</span><span>보람초 6학년 수업</span><span>2026년 11월</span></span><span class="w-state done">완료</span></span>
           <img class="w-thumb" data-img="hg_river" alt="">
         </a>
       </li>
@@ -318,10 +320,10 @@ dialog.reader[open]{display:flex;flex-direction:column}
         <li><time>2026.07 ~ 09</time><div><b>2026 사회적가치페스티벌</b><small>UIA 부스 운영</small></div></li>
         <li><time>2026.08</time><div><b>2026 한글대전 한글 국제 AI 영상 공모전</b><small>단편 「이응 ㅇ — 받는 사람 : 당신」 대표 출품, 최종 심사 진출</small></div><a class="go" href="#ieung">작업 보기</a></li>
         <li><time>2026.08 ~ 11</time><div><b>대전콘텐츠코리아랩 콘텐츠 기자단 2기</b><small>지역영화교류전, 대전콘텐츠페어 현장 영상 취재</small></div></li>
-        <li><time>2026.09</time><div><b>호연학사 에너지 절약 카드뉴스</b><small>4인 팀, 4장, 당선</small></div><a class="go" href="#energy">작업 보기</a></li>
+        <li><time>2026.09</time><div><b>호연학사 에너지 절약 카드뉴스</b><small>4인 팀, 4장, 채택</small></div><a class="go" href="#energy">작업 보기</a></li>
         <li><time>2026.09 ~</time><div><b>KUS 창업동아리 빈칸·잇다</b><small>팀장</small></div><a class="go" href="#binkan">작업 보기</a></li>
         <li><time>2026.10</time><div><b>세계경주포럼 참관, 임팩톤@경주</b><small>고려대학교 문제정의 창업캠프 「AI 시대, 무엇을 풀 것인가?」</small></div></li>
-        <li><time>2026.11</time><div><b>보람초등학교 한글 수업 「한글 수호대」</b><small>문화캐릭터기획과개발 2조, 6학년 80분 수업 준비</small></div><a class="go" href="#hangeul">작업 보기</a></li>
+        <li><time>2026.11</time><div><b>보람초등학교 한글 수업 「한글 수호대」</b><small>문화캐릭터기획과개발 2조, 6학년 80분 수업에 쓴 AI 영상 여섯 편 제작</small></div><a class="go" href="#hangeul">작업 보기</a></li>
         <li><time>2026.11 ~</time><div><b>외국인 근로자 산업안전 교재 제작</b><small>A6 크기 교재에 넣을 삽화 검토, QR로 연결할 영상 구성</small></div></li>
       </ol>
     </div>
@@ -424,20 +426,30 @@ const P = {
   },
   hangeul:{
     title:"한글 수호대",
-    kick:"보람초등학교 6학년 한글 수업의 세계관과 캐릭터, 문화캐릭터기획과개발 2조",
-    facts:[["수업","2026년 11월, 80분 연속"],["대상","보람초등학교 6학년"],["역할","수업 준비, 스토리라인·등장인물 발표"],["도구","ChatGPT 이미지 생성"]],
+    kick:"보람초등학교 6학년 한글 수업에 쓴 AI 영상 여섯 편, 문화캐릭터기획과개발 2조",
+    facts:[["수업","2026년 11월, 80분 연속"],["대상","보람초등학교 6학년"],["역할","AI 영상 여섯 편 제작, 중간발표에서 스토리라인·등장인물 발표"],["분량","여섯 편, 합쳐서 1분 55초"]],
+    videosTitle:"수업에 쓴 영상",
+    videos:[
+      ["hangeul/1","1. 자음마을 프롤로그 (15초). 지붕에 자음을 얹은 초가집 마을에 먹구름이 나타납니다."],
+      ["hangeul/2","2. 자음마을 진료소 (20초). 의사 훈이가 주민을 진찰하고, 입과 목 옆모습에 ㄱ을 붙이자 편지 조각이 빠져나옵니다."],
+      ["hangeul/3","3. 모음강 (20초). 강에 빠진 아이들을 건져 올리고, 민이가 점과 선으로 모음을 맞춥니다."],
+      ["hangeul/4","4. 받침산맥 (20초). 돌문에 ㄴ을 끼워 ‘산’을 완성합니다."],
+      ["hangeul/5","5. 정상 (20초). 안개 속에서 먹구름과 마주하고, 빈칸이 남은 두루마리를 펼칩니다."],
+      ["hangeul/6","6. 엔딩 (20초). 언덕 위 두루마리가 빛나고 마을이 제 모습을 되찾습니다."]
+    ],
+    imagesTitle:"세계관 그림",
     images:[["hg_river","모음강. 모음을 물줄기와 폭포로 바꿔 그린 세계관 배경"],["hg_mountain","받침산맥. 무너진 댐을 고치는 모험 장면"],["hg_sheet","네 방향에서 본 캐릭터 시트"]],
     text:[
-      "한글과 훈민정음 해례본, 세종대왕을 주제로 초등학생이 미션을 풀면서 한글을 만든 원리를 알아가는 수업입니다. 이야기는 프롤로그와 미션 네 개로 짰습니다. 팀이 AI로 세계관과 캐릭터를 먼저 만들어 두고, 수업에서는 학생 활동 자료로 씁니다.",
+      "한글과 훈민정음 해례본, 세종대왕을 주제로 초등학생이 미션을 풀면서 한글을 만든 원리를 알아가는 수업입니다. 이야기는 자음마을, 모음강, 받침산맥을 차례로 지나 정상에서 먹구름을 만나는 순서로 짰고, 저는 그 순서에 맞춰 영상 여섯 편을 만들었습니다.",
       "모음은 강과 폭포로, 받침은 산맥으로 바꾸는 식으로 한글의 구성 요소를 지형에 옮겼습니다. 캐릭터는 앞, 옆, 뒤에서 본 시트로 정리해 장면이 바뀌어도 모습이 흔들리지 않게 했습니다.",
-      "중간발표에서 활동이 그냥 놀이에 그친다는 피드백을 받았습니다. 그래서 테트리스는 모음 모양에 따라 자음 자리가 정해지는 모아쓰기 규칙을 지켜야 줄이 지워지게 고쳤고, 집짓기는 종이 혀 모형을 직접 구부려 ㄱ, ㄴ 같은 자음 모양을 만들어 보는 활동으로 바꿨습니다."
+      "중간발표에서 집짓기 활동이 그냥 놀이에 그친다는 피드백을 받았습니다. 그래서 자음마을 장면을 집짓기에서 진료소로 바꿨습니다. 의사 훈이가 주민의 입과 목 옆모습을 띄워 놓고 ㄱ을 붙이는 장면이고, 바로 뒤에 학생들이 발음기관 그림에 자음을 붙이는 활동이 이어집니다."
     ],
-    note:"수업은 2026년 11월에 진행합니다."
+    note:"세계관 그림과 캐릭터 시트는 ChatGPT 이미지 생성으로 만들었습니다."
   },
   energy:{
     title:"에너지 절약 카드뉴스",
     kick:"제39대 사생회 온기, 호연학사 기숙사 에너지 절감 카드뉴스",
-    facts:[["제출","2026년 9월 9일"],["결과","당선"],["팀","4명"],["분량","카드뉴스 4장"]],
+    facts:[["제출","2026년 9월 9일"],["결과","채택"],["팀","4명"],["분량","카드뉴스 4장"]],
     grid:true,
     images:[["en_1","1장. 전기, 냉난방, 물 세 갈래로 나눈 표지"],["en_2","2장. 쓰지도 않는데 켜져 있는 것들"],["en_3","3장. 에어컨 켜기 전에 창문부터"],["en_4","4장. 수도세와 방 나가기 전 체크리스트"]],
     text:[
@@ -486,7 +498,7 @@ const P = {
     note:"세종시 잔반 통계와 식재료 활용률은 사업계획서에서 세운 추정과 가정입니다. 실제 학생식당에서 측정한 결과는 아직 없습니다."
   }
 };
-const MS = {"agora": {"name": "AGORA Project", "when": "2026년 5월부터", "org": "세종 우리누리", "kind": "run", "mark": "진행 중"}, "scurt": {"name": "S-CURT", "when": "2026년 1학기", "org": "고려대 세종 CURT", "kind": "done", "mark": "완료"}, "chuncheon": {"name": "청·춘·천", "when": "2026년 7월 16일~18일", "org": "UIA 임팩톤@춘천", "kind": "done", "mark": "완료"}, "ieung": {"name": "이응 ㅇ", "when": "2026년 8월, 9월 1일 출품", "org": "2026 한글대전", "kind": "done", "mark": "최종 심사 진출"}, "energy": {"name": "에너지 절약", "when": "2026년 9월", "org": "호연학사 사생회", "kind": "done", "mark": "당선"}, "binkan": {"name": "빈칸·잇다", "when": "2026년 9월부터", "org": "KUS 창업동아리", "kind": "run", "mark": "진행 중"}, "jeanban": {"name": "덜담", "when": "2026년 7월부터", "org": "KUALP ESG경영팀", "kind": "run", "mark": "진행 중"}, "ongi": {"name": "On the Other Side", "when": "2026년 11월 2일~3일", "org": "호연학사 사생회 홍보부", "kind": "done", "mark": "완료"}, "hangeul": {"name": "한글 수호대", "when": "2026년 11월", "org": "보람초 6학년 수업", "kind": "run", "mark": "준비 중"}};
+const MS = {"agora": {"name": "AGORA Project", "when": "2026년 5월부터", "org": "세종 우리누리", "kind": "run", "mark": "진행 중"}, "scurt": {"name": "S-CURT", "when": "2026년 1학기", "org": "고려대 세종 CURT", "kind": "done", "mark": "완료"}, "chuncheon": {"name": "청·춘·천", "when": "2026년 7월 16일~18일", "org": "UIA 임팩톤@춘천", "kind": "done", "mark": "완료"}, "ieung": {"name": "이응 ㅇ", "when": "2026년 8월, 9월 1일 출품", "org": "2026 한글대전", "kind": "done", "mark": "최종 심사 진출"}, "energy": {"name": "에너지 절약", "when": "2026년 9월", "org": "호연학사 사생회", "kind": "done", "mark": "채택"}, "binkan": {"name": "빈칸·잇다", "when": "2026년 9월부터", "org": "KUS 창업동아리", "kind": "run", "mark": "진행 중"}, "jeanban": {"name": "덜담", "when": "2026년 7월부터", "org": "KUALP ESG경영팀", "kind": "run", "mark": "진행 중"}, "ongi": {"name": "On the Other Side", "when": "2026년 11월 2일~3일", "org": "호연학사 사생회 홍보부", "kind": "done", "mark": "완료"}, "hangeul": {"name": "한글 수호대", "when": "2026년 11월", "org": "보람초 6학년 수업", "kind": "done", "mark": "완료"}};
 const ROUTE = ["agora", "scurt", "chuncheon", "ieung", "energy", "binkan", "jeanban", "ongi", "hangeul"];
 
 document.querySelectorAll("img[data-img]").forEach(i=>{ i.src = IMG[i.dataset.img]; i.decoding = "async"; });
@@ -524,10 +536,15 @@ function render(id){
   const dl = el("dl","facts");
   d.facts.forEach(([k,v])=>{ const w=el("div"); w.append(el("dt",null,k), el("dd",null,v)); dl.append(w); });
   body.append(dl);
+  if(d.videos){
+    const g = el("div","shots vids");
+    d.videos.forEach(([k,cap])=>{ const f=el("figure"); const v=el("video"); v.controls=true; v.playsInline=true; v.preload="none"; v.poster="media/"+k+".webp"; v.src="media/"+k+".mp4"; v.setAttribute("aria-label",cap); f.append(v, el("figcaption",null,cap)); g.append(f); });
+    body.append(blk(d.videosTitle||"영상", g, true));
+  }
   if(d.images){
     const g = el("div","shots"+(d.grid?" quad":(d.images.length>2?" many":"")));
     d.images.forEach(([k,cap])=>{ const f=el("figure"); const im=el("img"); im.src=IMG[k]; im.alt=cap; im.loading="lazy"; f.append(im, el("figcaption",null,cap)); g.append(f); });
-    body.append(blk(null, g, true));
+    body.append(blk(d.imagesTitle||null, g, true));
   }
   body.append(blk(null, d.text.map(t=>el("p",null,t))));
   if(d.steps){ const ol=el("ol","flow"); d.steps.forEach(x=>ol.append(el("li",null,x))); body.append(blk(d.stepsTitle, ol)); }
