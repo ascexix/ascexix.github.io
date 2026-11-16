@@ -63,7 +63,8 @@ button{font:inherit;color:inherit}
 .hero h1{margin:0;font-size:1rem}
 .hero .mark{display:block;margin-left:-.025em;font-weight:900;font-size:25vw;font-size:calc(100cqw / 3.37);line-height:.86;letter-spacing:-.055em;white-space:nowrap}
 .hero .mark{touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:default}
-.hero .ch{display:inline-block;text-align:center}
+.hero .mark.live{letter-spacing:0}
+.hero .ch{display:inline-block}
 .hero-top{position:relative}
 .rub{position:absolute;right:0;bottom:0;margin:0;font-size:.86rem;line-height:1.5;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .hero .real{display:block;margin-top:clamp(.35rem,1vw,.8rem);font-size:clamp(1.05rem,1.5vw,1.3rem);font-weight:800;line-height:1.3}
@@ -516,66 +517,97 @@ document.querySelectorAll(".copy").forEach(b=>b.onclick = async ()=>{
   setTimeout(()=>b.textContent = "복사", 1800);
 });
 
-/* 첫 화면 글자. ascesis가 단련이라는 뜻이라, 문지르면 눌렸다가 되돌아오고 그 횟수를 센다 */
+/* 글자 누르기. ascesis가 단련이라는 뜻이라, 포인터가 지나가는 자리의 글자가 부드럽게 눌렸다가 천천히 되돌아온다.
+   첫 화면 ascexix는 눌린 횟수를 세고, 작업 제목은 반응만 한다. */
 (function(){
   const mark = document.querySelector(".hero .mark"), rub = document.getElementById("rub"), repsEl = document.getElementById("reps");
   if(!mark || !rub || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const HEAVY = 900, LIGHT = 130, K = 190, C = 15;
-  let L = [], raf = 0, last = 0, px = null, py = null, reps = 0, counting = false;
-  function build(){
-    const text = mark.textContent.trim();
-    const fs = parseFloat(getComputedStyle(mark).fontSize);
-    const rg = document.createRange(); rg.selectNodeContents(mark); const w0 = rg.getBoundingClientRect().width;
-    const box = document.createElement("span"); box.setAttribute("aria-hidden","true");
+  const HEAVY = 900, LIGHT = 330, T_DOWN = .075, T_UP = .4;
+  const groups = [];
+  let raf = 0, last = 0, px = null, py = null, holdUntil = 0, reps = 0;
+
+  function split(el, cls){
+    const text = el.textContent.trim(), letters = [];
     const sr = document.createElement("span"); sr.className = "sr-only"; sr.textContent = text;
-    [...text].forEach(c=>{ const e = document.createElement("span"); e.className = "ch"; e.textContent = c; box.append(e); L.push({e, w:HEAVY, v:0, hold:0, down:false}); });
-    mark.replaceChildren(sr, box);
-    /* 굵기가 바뀌어도 자리가 흔들리지 않게 글자마다 가장 굵을 때의 폭을 고정한다 */
-    const ws = L.map(l=>l.e.getBoundingClientRect().width), sum = ws.reduce((a,b)=>a+b, 0);
-    const fit = w0 > 0 && sum > 0 ? w0 / sum : 1; /* 글자를 나누면 자간 보정이 풀려 조금 넓어지므로 원래 폭에 맞춘다 */
-    ws.forEach((w,i)=>{ L[i].e.style.width = (w * fit / fs).toFixed(4) + "em"; });
+    const box = document.createElement("span"); box.setAttribute("aria-hidden","true");
+    for(const c of text){
+      if(c === " "){ box.append(" "); continue; }
+      const e = document.createElement("span"); e.className = cls; e.textContent = c; box.append(e);
+      letters.push({e, w:HEAVY, down:false});
+    }
+    el.replaceChildren(sr, box);
+    return letters;
+  }
+  function build(){
+    /* 첫 화면: 글자가 가늘어져 폭이 줄면 남는 공간을 글자 사이에 고르게 나눠, 단어 전체 폭은 그대로 둔다 */
+    const fs = parseFloat(getComputedStyle(mark).fontSize);
+    const rg = document.createRange(); rg.selectNodeContents(mark);
+    /* 원래 글자 폭. 범위 측정에는 마지막 글자 뒤 자간이 빠져 있어 그만큼 더한다 */
+    const w0 = rg.getBoundingClientRect().width - (parseFloat(getComputedStyle(mark).letterSpacing) || 0);
+    const hero = {el:mark, hero:true, wEm:w0 / fs, rx:.5, ry:.55, idle:false, sweep:null, counting:false};
+    hero.L = split(mark, "ch"); mark.classList.add("live");
+    groups.push(hero); spread(hero, fs);
+    document.querySelectorAll(".w-title").forEach(t=>{ groups.push({el:t, L:split(t, "tc"), rx:.62, ry:.6, idle:true}); });
     rub.hidden = false;
-    const t0 = performance.now() + 350;
-    L.forEach((l,i)=>{ l.hold = t0 + i * 85; });
-    setTimeout(()=>{ counting = true; }, 350 + L.length * 85 + 700);
+    /* 처음 한 번, 보이지 않는 손가락이 왼쪽에서 오른쪽으로 지나간다 */
+    setTimeout(()=>{ hero.sweep = {t0:performance.now(), dur:1250}; hero.idle = false; wake(); }, 450);
     wake();
+  }
+  function spread(g, fs){
+    const ws = g.L.map(l=>l.e.getBoundingClientRect().width), sum = ws.reduce((a,b)=>a+b, 0);
+    const gap = ((g.wEm * fs - sum) / (g.L.length - 1) / fs).toFixed(4) + "em";
+    for(let i = 1; i < g.L.length; i++) g.L[i].e.style.marginLeft = gap;
   }
   function wake(){ if(!raf){ last = performance.now(); raf = requestAnimationFrame(tick); } }
   function tick(t){
-    const dt = Math.min(.032, (t - last) / 1000); last = t;
-    let busy = px !== null;
-    const R = parseFloat(getComputedStyle(mark).fontSize) * .5;
-    for(const l of L){
-      let target = HEAVY;
-      if(l.hold){ if(t >= l.hold && t < l.hold + 150) target = LIGHT; if(t >= l.hold + 150) l.hold = 0; busy = true; }
-      if(px !== null){
-        const r = l.e.getBoundingClientRect();
-        const d = Math.hypot(px - (r.left + r.width / 2), py - (r.top + r.height * .58));
-        const f = Math.max(0, 1 - d / R);
-        target = Math.min(target, HEAVY - (HEAVY - LIGHT) * f * (2 - f));
+    const dt = Math.min(.05, (t - last) / 1000); last = t;
+    let again = false;
+    for(const g of groups){
+      const box = g.el.getBoundingClientRect();
+      if(box.bottom < -50 || box.top > innerHeight + 50){ if(g.idle) continue; }
+      const fs = parseFloat(getComputedStyle(g.el).fontSize);
+      let x = null, y = null;
+      if(g.sweep){
+        const k = (t - g.sweep.t0) / g.sweep.dur;
+        if(k >= 1){ g.sweep = null; setTimeout(()=>{ g.L.forEach(l=>{ l.down = false; }); g.counting = true; }, 1600); }
+        else { x = box.left - fs * .6 + (box.width + fs * 1.2) * k; y = box.top + box.height * .55; }
       }
-      l.v += (K * (target - l.w) - C * l.v) * dt;
-      l.w += l.v * dt;
-      if(Math.abs(target - l.w) > .6 || Math.abs(l.v) > 4) busy = true; else { l.w = target; l.v = 0; }
-      l.e.style.fontWeight = Math.round(Math.max(60, Math.min(920, l.w)));
-      if(!l.down && l.w < 420) l.down = true;
-      else if(l.down && l.w > 780){ l.down = false; if(counting){ reps++; repsEl.textContent = reps; } }
+      if(x === null && px !== null && py > box.top - fs * .7 && py < box.bottom + fs * .7 && px > box.left - fs && px < box.right + fs){ x = px; y = py; }
+      if(x === null && g.idle) continue;
+      const rects = x === null ? null : g.L.map(l=>l.e.getBoundingClientRect());
+      let moving = false;
+      g.L.forEach((l,i)=>{
+        let target = HEAVY;
+        if(rects){
+          const r = rects[i], dx = (x - (r.left + r.width / 2)) / (fs * g.rx), dy = (y - (r.top + r.height * .56)) / (fs * g.ry);
+          target = HEAVY - (HEAVY - LIGHT) * Math.exp(-(dx * dx + dy * dy));
+        }
+        l.w += (target - l.w) * (1 - Math.exp(-dt / (target < l.w ? T_DOWN : T_UP)));
+        if(HEAVY - l.w < 3 && target === HEAVY) l.w = HEAVY; else moving = true;
+        l.e.style.fontWeight = Math.round(l.w);
+        if(g.hero){
+          if(!l.down && l.w < 600) l.down = true;
+          else if(l.down && l.w > 840){ l.down = false; if(g.counting){ reps++; repsEl.textContent = reps; } }
+        }
+      });
+      if(g.hero) spread(g, fs);
+      g.idle = !moving && x === null;
+      if(!g.idle) again = true;
     }
-    raf = busy ? requestAnimationFrame(tick) : 0;
+    raf = again ? requestAnimationFrame(tick) : 0;
   }
-  const near = e => { const r = mark.getBoundingClientRect(); return e.clientY < r.bottom + 160 && e.clientY > r.top - 160; };
-  document.addEventListener("pointermove", e=>{ if(e.pointerType === "touch" && !mark.contains(e.target)) return; if(near(e)){ px = e.clientX; py = e.clientY; wake(); } else if(px !== null){ px = null; wake(); } }, {passive:true});
-  mark.addEventListener("pointerdown", e=>{
-    px = e.clientX; py = e.clientY;
-    /* 톡 누르기만 해도 그 글자가 한 번 눌리게 */
-    const hit = L.find(l=>{ const r = l.e.getBoundingClientRect(); return e.clientX >= r.left && e.clientX < r.right; });
-    if(hit && !hit.hold) hit.hold = performance.now();
-    wake();
-  }, {passive:true});
-  const release = e => { if(e.pointerType !== "mouse"){ px = null; wake(); } };
+  document.addEventListener("pointermove", e=>{ px = e.clientX; py = e.clientY; wake(); }, {passive:true});
+  /* 톡 누르기만 해도 잠깐 눌린 채로 있다가 풀린다 */
+  document.addEventListener("pointerdown", e=>{ px = e.clientX; py = e.clientY; holdUntil = performance.now() + 220; wake(); }, {passive:true});
+  const release = e => {
+    if(e.pointerType === "mouse") return;
+    const wait = holdUntil - performance.now();
+    if(wait > 0) setTimeout(()=>{ px = null; wake(); }, wait); else { px = null; wake(); }
+  };
   document.addEventListener("pointerup", release, {passive:true});
   document.addEventListener("pointercancel", release, {passive:true});
-  document.documentElement.addEventListener("pointerleave", ()=>{ px = null; wake(); });
+  document.documentElement.addEventListener("pointerleave", e=>{ if(e.pointerType === "mouse"){ px = null; wake(); } });
+  addEventListener("resize", ()=>{ const h = groups[0]; if(h){ h.idle = false; wake(); } });
   const ready = document.fonts && document.fonts.load ? Promise.race([document.fonts.load('900 1em "Pretendard Variable"', "ascexix"), new Promise(r=>setTimeout(r, 2500))]) : Promise.resolve();
   ready.then(build, build);
 })();
