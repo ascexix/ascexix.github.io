@@ -64,7 +64,7 @@ button{font:inherit;color:inherit}
 .hero .mark{display:block;margin-left:-.025em;font-weight:900;font-size:25vw;font-size:calc(100cqw / 3.37);line-height:.86;letter-spacing:-.055em;white-space:nowrap}
 .hero .mark{touch-action:pan-y;-webkit-user-select:none;user-select:none;cursor:default}
 .hero .mark.live{letter-spacing:0}
-.hero .ch{display:inline-block}
+.hero .ch{display:inline-block;will-change:transform}
 .hero-top{position:relative}
 .rub{position:absolute;right:0;bottom:0;margin:0;font-size:.86rem;line-height:1.5;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .hero .real{display:block;margin-top:clamp(.35rem,1vw,.8rem);font-size:clamp(1.05rem,1.5vw,1.3rem);font-weight:800;line-height:1.3}
@@ -517,88 +517,157 @@ document.querySelectorAll(".copy").forEach(b=>b.onclick = async ()=>{
   setTimeout(()=>b.textContent = "복사", 1800);
 });
 
-/* 글자 누르기. ascesis가 단련이라는 뜻이라, 포인터가 지나가는 자리의 글자가 부드럽게 눌렸다가 천천히 되돌아온다.
+/* 글자 누르기. ascesis가 단련이라는 뜻이라, 포인터가 지나가는 자리의 글자가 눌렸다가 천천히 되돌아온다.
+   포인터가 직접 닿은 글자는 실선에 가깝게, 양옆 글자는 완만하게 눌린다.
    첫 화면 ascexix는 눌린 횟수를 세고, 작업 제목은 반응만 한다. */
 (function(){
   const mark = document.querySelector(".hero .mark"), rub = document.getElementById("rub"), repsEl = document.getElementById("reps");
   if(!mark || !rub || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const HEAVY = 900, LIGHT = 330, T_DOWN = .075, T_UP = .4;
-  const groups = [];
-  let raf = 0, last = 0, px = null, py = null, holdUntil = 0, reps = 0;
+  const HEAVY = 900, SOFT = 340, CORE = 105, T_DOWN = .085, T_UP = .42;
+  const STEPS = [100,200,300,400,500,600,700,800,900], STEP = 10;
+  const readerEl = document.getElementById("reader");
+  let hero = null, titles = [];
+  let raf = 0, last = 0, px = null, py = null, sx = 0, sy = 0, has = false, holdUntil = 0, reps = 0;
 
-  function split(el, cls){
+  /* 굵기에 따른 글자 폭을 처음에 한 번만 재 두고, 움직이는 동안에는 화면을 다시 재지 않는다 */
+  function widthTable(chars, fs){
+    const probe = document.createElement("span"); probe.setAttribute("aria-hidden","true");
+    probe.style.cssText = "position:absolute;left:0;top:0;visibility:hidden;white-space:nowrap;letter-spacing:0";
+    const uniq = [...new Set(chars)], cells = [];
+    uniq.forEach(c=>STEPS.forEach(w=>{ const e = document.createElement("span"); e.style.cssText = "display:inline-block;font-weight:" + w; e.textContent = c; probe.append(e); cells.push(e); }));
+    mark.append(probe);
+    const ws = cells.map(e=>e.getBoundingClientRect().width / fs); probe.remove();
+    const T = {}; uniq.forEach((c,i)=>{ T[c] = ws.slice(i * STEPS.length, (i + 1) * STEPS.length); });
+    return T;
+  }
+  function adv(tab, w){ const k = Math.max(0, Math.min(STEPS.length - 1.0001, (w - 100) / 100)), i = Math.floor(k); return tab[i] + (tab[i + 1] - tab[i]) * (k - i); }
+  function wrap(el, cls){
     const text = el.textContent.trim(), letters = [];
     const sr = document.createElement("span"); sr.className = "sr-only"; sr.textContent = text;
     const box = document.createElement("span"); box.setAttribute("aria-hidden","true");
     for(const c of text){
       if(c === " "){ box.append(" "); continue; }
       const e = document.createElement("span"); e.className = cls; e.textContent = c; box.append(e);
-      letters.push({e, w:HEAVY, down:false});
+      letters.push({e, c, w:HEAVY, down:false});
     }
-    el.replaceChildren(sr, box);
-    return letters;
+    return {text, sr, box, letters};
   }
   function build(){
-    /* 첫 화면: 글자가 가늘어져 폭이 줄면 남는 공간을 글자 사이에 고르게 나눠, 단어 전체 폭은 그대로 둔다 */
     const fs = parseFloat(getComputedStyle(mark).fontSize);
     const rg = document.createRange(); rg.selectNodeContents(mark);
-    /* 원래 글자 폭. 범위 측정에는 마지막 글자 뒤 자간이 빠져 있어 그만큼 더한다 */
-    const w0 = rg.getBoundingClientRect().width - (parseFloat(getComputedStyle(mark).letterSpacing) || 0);
-    const hero = {el:mark, hero:true, wEm:w0 / fs, rx:.5, ry:.55, idle:false, sweep:null, counting:false};
-    hero.L = split(mark, "ch"); mark.classList.add("live");
-    groups.push(hero); spread(hero, fs);
-    document.querySelectorAll(".w-title").forEach(t=>{ groups.push({el:t, L:split(t, "tc"), rx:.62, ry:.6, idle:true}); });
+    /* 원래 단어 폭(em). 범위 측정에는 마지막 글자 뒤 자간이 빠져 있어 그만큼 더한다 */
+    const W = (rg.getBoundingClientRect().width - (parseFloat(getComputedStyle(mark).letterSpacing) || 0)) / fs;
+    const parts = wrap(mark, "ch"), L = parts.letters, T = widthTable(L.map(l=>l.c), fs);
+    const g0 = (W - L.reduce((a,l)=>a + T[l.c][8], 0)) / (L.length - 1);
+    let X = 0;
+    L.forEach((l,i)=>{ l.tab = T[l.c]; l.a0 = l.a = l.tab[8]; l.X = X; X += l.a0 + g0; l.e.style.width = l.a0.toFixed(4) + "em"; if(i) l.e.style.marginLeft = g0.toFixed(4) + "em"; });
+    mark.replaceChildren(parts.sr, parts.box); mark.classList.add("live");
+    hero = {el:mark, L, W, idle:false, sweep:null, counting:false};
+    document.querySelectorAll(".w-title").forEach(t=>{ const q = wrap(t, "tc"); t.replaceChildren(q.sr, q.box); titles.push({el:t, L:q.letters, idle:true}); });
     rub.hidden = false;
     /* 처음 한 번, 보이지 않는 손가락이 왼쪽에서 오른쪽으로 지나간다 */
-    setTimeout(()=>{ hero.sweep = {t0:performance.now(), dur:1250}; hero.idle = false; wake(); }, 450);
+    setTimeout(()=>{ hero.sweep = {t0:performance.now(), dur:1300}; hero.idle = false; wake(); }, 450);
+    setTimeout(prewarm, 2600);
     wake();
   }
-  function spread(g, fs){
-    const ws = g.L.map(l=>l.e.getBoundingClientRect().width), sum = ws.reduce((a,b)=>a+b, 0);
-    const gap = ((g.wEm * fs - sum) / (g.L.length - 1) / fs).toFixed(4) + "em";
-    for(let i = 1; i < g.L.length; i++) g.L[i].e.style.marginLeft = gap;
+  /* 가변 폰트는 처음 쓰는 굵기마다 글꼴을 새로 만드느라 화면이 멈칫한다.
+     쓸 굵기를 정해진 단계로 묶고, 한가할 때 미리 한 번씩 그려 두어 움직일 때는 만들어 둔 것을 꺼내 쓰게 한다 */
+  function prewarm(){
+    const jobs = [];
+    /* 작업 제목은 마우스가 있는 기기에서만 오래 반응하므로, 터치 기기에서는 첫 화면 글자만 준비한다 */
+    const withTitles = matchMedia("(hover: hover)").matches;
+    [[mark, hero.L.map(l=>l.c).join("")], [withTitles && titles[0] && titles[0].el, titles.map(g=>g.L.map(l=>l.c).join("")).join("")]].forEach(([host, text])=>{
+      if(!host || !text) return;
+      const box = document.createElement("span"); box.setAttribute("aria-hidden","true");
+      box.style.cssText = "position:absolute;left:0;top:0;width:0;height:0;overflow:hidden;visibility:hidden;white-space:nowrap;pointer-events:none";
+      host.append(box);
+      const uniq = [...new Set(text)].join("");
+      for(let w = 100; w <= 900; w += STEP) jobs.push(()=>{ const e = document.createElement("span"); e.style.fontWeight = w; e.textContent = uniq; box.append(e); });
+    });
+    const idle = window.requestIdleCallback || (f=>setTimeout(()=>f({timeRemaining:()=>8}), 60));
+    (function run(d){ let n = 0; while(jobs.length && (n++ < 2 || d.timeRemaining() > 4)) jobs.shift()(); if(jobs.length) idle(run); })({timeRemaining:()=>0});
   }
-  function wake(){ if(!raf){ last = performance.now(); raf = requestAnimationFrame(tick); } }
+  function geo(){
+    const sX = scrollX, sY = scrollY;
+    for(const g of [hero, ...titles]){
+      const r = g.el.getBoundingClientRect();
+      g.left = r.left + sX; g.right = r.right + sX; g.top = r.top + sY; g.bottom = r.bottom + sY;
+      g.fs = parseFloat(getComputedStyle(g.el).fontSize);
+    }
+  }
+  function wake(){ if(!raf && hero){ geo(); last = performance.now(); raf = requestAnimationFrame(tick); } }
+  const ease = (l, target, dt) => { l.w += (target - l.w) * (1 - Math.exp(-dt / (target < l.w ? T_DOWN : T_UP))); if(target === HEAVY && HEAVY - l.w < 2){ l.w = HEAVY; return false; } return true; };
   function tick(t){
     const dt = Math.min(.05, (t - last) / 1000); last = t;
-    let again = false;
-    for(const g of groups){
-      const box = g.el.getBoundingClientRect();
-      if(box.bottom < -50 || box.top > innerHeight + 50){ if(g.idle) continue; }
-      const fs = parseFloat(getComputedStyle(g.el).fontSize);
-      let x = null, y = null;
+    const active = px !== null && !readerEl.open;
+    /* 포인터 좌표를 한 번 더 부드럽게 따라가, 이벤트 간격 때문에 끊겨 보이지 않게 한다 */
+    if(active){ if(!has){ sx = px; sy = py; has = true; } else { const k = 1 - Math.exp(-dt / .035); sx += (px - sx) * k; sy += (py - sy) * k; } } else has = false;
+    const pX = sx + scrollX, pY = sy + scrollY;
+    let again = active && (Math.abs(px - sx) > .3 || Math.abs(py - sy) > .3);
+
+    { /* 첫 화면: 좌표를 모두 계산으로 구하고, 글자는 transform으로만 옮긴다 */
+      const g = hero, n = g.L.length; let lx = null, ly = 0;
       if(g.sweep){
         const k = (t - g.sweep.t0) / g.sweep.dur;
         if(k >= 1){ g.sweep = null; setTimeout(()=>{ g.L.forEach(l=>{ l.down = false; }); g.counting = true; }, 1600); }
-        else { x = box.left - fs * .6 + (box.width + fs * 1.2) * k; y = box.top + box.height * .55; }
+        else lx = -.6 + (g.W + 1.2) * k;
       }
-      if(x === null && px !== null && py > box.top - fs * .7 && py < box.bottom + fs * .7 && px > box.left - fs && px < box.right + fs){ x = px; y = py; }
-      if(x === null && g.idle) continue;
-      const rects = x === null ? null : g.L.map(l=>l.e.getBoundingClientRect());
+      if(lx === null && active){
+        const x = (pX - g.left) / g.fs, y = (pY - (g.top + (g.bottom - g.top) * .56)) / g.fs;
+        if(x > -1.2 && x < g.W + 1.2 && Math.abs(y) < 1.3){ lx = x; ly = y; }
+      }
+      if(lx !== null || !g.idle){
+        let moving = false, sum = 0;
+        const fy = Math.exp(-(ly * ly) / .3025);
+        for(const l of g.L){
+          let target = HEAVY;
+          if(lx !== null){
+            const dx = lx - (l.X + l.a0 / 2);
+            const base = HEAVY - (HEAVY - SOFT) * Math.exp(-(dx * dx) / .25) * fy;
+            const din = Math.max(0, Math.abs(dx) - l.a0 * .38) / .1;
+            target = base - (base - CORE) * Math.exp(-din * din) * fy;
+          }
+          if(ease(l, target, dt)) moving = true;
+          if(!l.down && l.w < 600) l.down = true;
+          else if(l.down && l.w > 840){ l.down = false; if(g.counting){ reps++; repsEl.textContent = reps; } }
+          l.a = adv(l.tab, l.w); sum += l.a;
+        }
+        const gap = (g.W - sum) / (n - 1); let x = 0;
+        for(const l of g.L){
+          const tx = x - l.X;
+          const q = Math.round(l.w / STEP) * STEP; if(q !== l.q){ l.q = q; l.e.style.fontWeight = q; }
+          l.e.style.transform = Math.abs(tx) < .0003 ? "" : "translateX(" + tx.toFixed(4) + "em)";
+          x += l.a + gap;
+        }
+        g.idle = !moving && lx === null;
+        if(!g.idle) again = true;
+      }
+    }
+    for(const g of titles){
+      const inside = active && pY > g.top - g.fs * .7 && pY < g.bottom + g.fs * .7 && pX > g.left - g.fs && pX < g.right + g.fs;
+      if(!inside && g.idle) continue;
+      const rects = inside ? g.L.map(l=>l.e.getBoundingClientRect()) : null;
       let moving = false;
       g.L.forEach((l,i)=>{
         let target = HEAVY;
         if(rects){
-          const r = rects[i], dx = (x - (r.left + r.width / 2)) / (fs * g.rx), dy = (y - (r.top + r.height * .56)) / (fs * g.ry);
-          target = HEAVY - (HEAVY - LIGHT) * Math.exp(-(dx * dx + dy * dy));
+          const r = rects[i], dx = (sx - (r.left + r.width / 2)) / g.fs, dy = (sy - (r.top + r.height * .56)) / g.fs;
+          const fy = Math.exp(-(dy * dy) / .36);
+          const base = HEAVY - (HEAVY - SOFT) * Math.exp(-(dx * dx) / .36) * fy;
+          const din = Math.max(0, Math.abs(dx) - r.width / g.fs * .38) / .1;
+          target = base - (base - CORE) * Math.exp(-din * din) * fy;
         }
-        l.w += (target - l.w) * (1 - Math.exp(-dt / (target < l.w ? T_DOWN : T_UP)));
-        if(HEAVY - l.w < 3 && target === HEAVY) l.w = HEAVY; else moving = true;
-        l.e.style.fontWeight = Math.round(l.w);
-        if(g.hero){
-          if(!l.down && l.w < 600) l.down = true;
-          else if(l.down && l.w > 840){ l.down = false; if(g.counting){ reps++; repsEl.textContent = reps; } }
-        }
+        if(ease(l, target, dt)) moving = true;
       });
-      if(g.hero) spread(g, fs);
-      g.idle = !moving && x === null;
+      for(const l of g.L){ const q = Math.round(l.w / STEP) * STEP; if(q !== l.q){ l.q = q; l.e.style.fontWeight = q; } }
+      g.idle = !moving && !inside;
       if(!g.idle) again = true;
     }
     raf = again ? requestAnimationFrame(tick) : 0;
   }
   document.addEventListener("pointermove", e=>{ px = e.clientX; py = e.clientY; wake(); }, {passive:true});
   /* 톡 누르기만 해도 잠깐 눌린 채로 있다가 풀린다 */
-  document.addEventListener("pointerdown", e=>{ px = e.clientX; py = e.clientY; holdUntil = performance.now() + 220; wake(); }, {passive:true});
+  document.addEventListener("pointerdown", e=>{ px = e.clientX; py = e.clientY; has = false; holdUntil = performance.now() + 240; wake(); }, {passive:true});
   const release = e => {
     if(e.pointerType === "mouse") return;
     const wait = holdUntil - performance.now();
@@ -607,7 +676,7 @@ document.querySelectorAll(".copy").forEach(b=>b.onclick = async ()=>{
   document.addEventListener("pointerup", release, {passive:true});
   document.addEventListener("pointercancel", release, {passive:true});
   document.documentElement.addEventListener("pointerleave", e=>{ if(e.pointerType === "mouse"){ px = null; wake(); } });
-  addEventListener("resize", ()=>{ const h = groups[0]; if(h){ h.idle = false; wake(); } });
+  addEventListener("resize", ()=>{ if(hero){ geo(); hero.idle = false; wake(); } });
   const ready = document.fonts && document.fonts.load ? Promise.race([document.fonts.load('900 1em "Pretendard Variable"', "ascexix"), new Promise(r=>setTimeout(r, 2500))]) : Promise.resolve();
   ready.then(build, build);
 })();
